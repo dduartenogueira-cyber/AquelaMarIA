@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Branding Prompt Chaining - Caso Real</title>
+  <style>
+    @font-face {
+      font-family: "satochi-regular";
+      src: local("satochi-regular"), local("Satoshi-Regular"), local("Satoshi Regular");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    :root {
+      --bg: #ffffff;
+      --paper: #ffffff;
+      --ink: #000000;
+      --muted: #4a4a4a;
+      --line: #d9d9d9;
+      --brand: #000000;
+      --brand-2: #1a1a1a;
+      --warn: #2f2f2f;
+      --danger: #000000;
+      --ok: #000000;
+      --radius: 12px;
+      --shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "satochi-regular", "Satoshi", "Avenir Next", "Avenir", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.35;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 28px auto 80px;
+      padding: 0 16px;
+    }
+    .hero {
+      background: #000000;
+      color: #ffffff;
+      padding: 24px;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3.2vw, 2rem);
+      letter-spacing: .2px;
+    }
+    .hero p { margin: 0; opacity: .95; }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0,1fr));
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .tab {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      padding: 10px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+      font-size: .92rem;
+    }
+    .tab.active {
+      background: #000000;
+      border-color: #000000;
+      color: #ffffff;
+    }
+
+    .panel {
+      display: none;
+      margin-top: 16px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .panel.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0,1fr));
+      gap: 12px;
+    }
+    .f { grid-column: span 12; }
+    .f.half { grid-column: span 6; }
+    .f.third { grid-column: span 4; }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 700;
+      font-size: .88rem;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid #d0d0d0;
+      border-radius: 10px;
+      padding: 10px;
+      font: inherit;
+      background: #fff;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .warn-border { border: 2px solid var(--danger) !important; }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button {
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .primary { background: var(--brand); color: #ffffff; }
+    .primary:hover { background: var(--brand-2); }
+    .ghost { background: #f2f2f2; color: #000000; }
+    .warn { background: #1f1f1f; color: #ffffff; }
+
+    .status {
+      margin-top: 10px;
+      font-size: .88rem;
+      color: var(--muted);
+    }
+    .hint {
+      margin-top: 8px;
+      font-size: .84rem;
+      color: var(--muted);
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+      min-height: 280px;
+    }
+
+    .kpi {
+      display: grid;
+      grid-template-columns: repeat(4,minmax(0,1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .k {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      font-size: .84rem;
+    }
+    .k b { display:block; font-size: 1.1rem; margin-top: 3px; }
+
+    @media (max-width: 900px) {
+      .tabs { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .f.half, .f.third { grid-column: span 12; }
+      .kpi { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Decoding mary - Prompt Chaining para Branding</h1>
+      <p>Preencha o briefing, gere prompts dos 3 agentes e consolide um caso real com rastreabilidade.</p>
+      <div class="kpi">
+        <div class="k">Etapa Atual<b id="k-step">Briefing</b></div>
+        <div class="k">Campos Preenchidos<b id="k-filled">0</b></div>
+        <div class="k">Prompts Gerados<b id="k-prompts">0/4</b></div>
+        <div class="k">Outputs Colados<b id="k-outs">0/3</b></div>
+      </div>
+    </section>
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-panel="briefing">1. Briefing</button>
+      <button class="tab" data-panel="ag1">2. researcher agent</button>
+      <button class="tab" data-panel="ag2">3. conceptor agent</button>
+      <button class="tab" data-panel="ag3">4. architect agent</button>
+      <button class="tab" data-panel="master">5. Master</button>
+      <button class="tab" data-panel="conhecimento">6. Oracle</button>
+      <button class="tab" data-panel="caso">7. Final Case</button>
+    </nav>
+
+    <section class="panel active" id="briefing">
+      <h2>Briefing de Marketing</h2>
+      <div class="grid">
+        <div class="f third"><label>Marca</label><input id="marca" placeholder="Ex.: Nubank" /></div>
+        <div class="f third"><label>Categoria</label><input id="categoria" placeholder="Ex.: Banco digital" /></div>
+        <div class="f third"><label>País/Região</label><input id="pais_regiao" placeholder="Ex.: Brasil" /></div>
+
+        <div class="f half"><label>Objetivo de negócio</label><textarea id="objetivo_negocio" placeholder="Ex.: Aumentar produtos por cliente em 12 meses"></textarea></div>
+        <div class="f half"><label>O que está impedindo a marca de alcançar o objetivo?</label><textarea id="bloqueadores" placeholder="Ex.: Percepção limitada da marca..."></textarea></div>
+
+        <div class="f half"><label>OKRs da marca</label><textarea id="okrs" placeholder="O1: ... KR1: ... KR2: ..."></textarea></div>
+        <div class="f half"><label>Pergunta central do projeto</label><textarea id="pergunta_central" placeholder="Ex.: Como reposicionar a marca para...?"></textarea></div>
+
+        <div class="f half"><label>Público prioritário</label><textarea id="publico_prioritario" placeholder="Ex.: Jovens adultos urbanos... "></textarea></div>
+        <div class="f half"><label>Mercados/canais prioritários</label><textarea id="mercados_canais" placeholder="Ex.: Social, CRM, app, mídia digital..."></textarea></div>
+
+        <div class="f third"><label>Concorrente 1</label><input id="conc1" /></div>
+        <div class="f third"><label>Concorrente 2</label><input id="conc2" /></div>
+        <div class="f third"><label>Concorrente 3</label><input id="conc3" /></div>
+
+        <div class="f third"><label>Período de análise</label><input id="periodo" placeholder="Ex.: últimos 12 meses" /></div>
+        <div class="f third"><label>Responsável</label><input id="responsavel" /></div>
+        <div class="f third"><label>Data</label><input id="data" placeholder="dd/mm/aaaa" /></div>
+
+        <div class="f"><label>Dados complementares</label><textarea id="dados_complementares" placeholder="Pesquisa interna, funil, NPS, social/search, reviews, restrições."></textarea></div>
+      </div>
+
+      <div class="row">
+        <button class="primary" id="preencherExemplo">Preencher exemplo real</button>
+        <button class="ghost" id="salvar">Salvar local</button>
+        <button class="ghost" id="carregar">Carregar local</button>
+        <button class="warn" id="limpar">Limpar</button>
+        <button class="primary" id="gerarTudo">Gerar prompts (1,2,3,Master)</button>
+      </div>
+      <div class="status" id="status">Pronto para preenchimento.</div>
+    </section>
+
+    <section class="panel" id="ag1">
+      <h2>researcher agent - Diagnóstico</h2>
+      <div class="row">
+        <button class="primary" id="genAg1">Gerar prompt A1</button>
+        <button class="ghost" data-copy="outAg1">Copiar prompt</button>
+      </div>
+      <textarea id="outAg1" class="mono" placeholder="Prompt do researcher agent aparecerá aqui"></textarea>
+      <label>Output real do researcher agent (cole aqui)</label>
+      <textarea id="realAg1" class="mono" placeholder="Cole a resposta real do researcher agent"></textarea>
+    </section>
+
+    <section class="panel" id="ag2">
+      <h2>conceptor agent - Inspirador</h2>
+      <div class="row">
+        <button class="primary" id="genAg2">Gerar prompt A2</button>
+        <button class="ghost" data-copy="outAg2">Copiar prompt</button>
+      </div>
+      <textarea id="outAg2" class="mono" placeholder="Prompt do conceptor agent aparecerá aqui"></textarea>
+      <label>Output real do conceptor agent (cole aqui)</label>
+      <textarea id="realAg2" class="mono" placeholder="Cole a resposta real do conceptor agent"></textarea>
+    </section>
+
+    <section class="panel" id="ag3">
+      <h2>architect agent - Arquiteto</h2>
+      <div class="row">
+        <button class="primary" id="genAg3">Gerar prompt A3</button>
+        <button class="ghost" data-copy="outAg3">Copiar prompt</button>
+      </div>
+      <textarea id="outAg3" class="mono" placeholder="Prompt do architect agent aparecerá aqui"></textarea>
+      <label>Output real do architect agent (cole aqui)</label>
+      <textarea id="realAg3" class="mono" placeholder="Cole a resposta real do architect agent"></textarea>
+    </section>
+
+    <section class="panel" id="master">
+      <h2>Master Prompt Orquestrador</h2>
+      <div class="row">
+        <button class="primary" id="genMaster">Gerar master prompt</button>
+        <button class="ghost" data-copy="outMaster">Copiar master</button>
+      </div>
+      <textarea id="outMaster" class="mono" placeholder="Master prompt aparecerá aqui"></textarea>
+      <p class="hint">Dica: use este prompt para rodar o processo inteiro em uma única execução.</p>
+    </section>
+
+    <section class="panel" id="conhecimento">
+      <h2>Oracle Proprietário do Projeto</h2>
+      <p class="hint">Cole aqui o conteúdo completo dos cursos e materiais proprietários. Esse bloco será incluído automaticamente nos prompts.</p>
+      <label>Base proprietária consolidada</label>
+      <textarea id="conhecimento" class="mono" placeholder="Cole aqui o conteúdo proprietário (cursos, frameworks, playbooks, glossário, princípios)."></textarea>
+      <div class="row">
+        <button class="ghost" id="importarConhecimento">Importar .txt/.md</button>
+        <button class="ghost" id="limparConhecimento">Limpar base proprietária</button>
+        <button class="ghost" data-copy="conhecimento">Copiar base proprietária</button>
+        <input type="file" id="fileKnowledge" accept=".txt,.md,text/plain,text/markdown" style="display:none" />
+      </div>
+    </section>
+
+    <section class="panel" id="caso">
+      <h2>Final Case Consolidado</h2>
+      <label>Consolidação executiva final</label>
+      <textarea id="finalCase" class="mono" placeholder="Cole aqui a síntese final com A1 + A2 + A3"></textarea>
+      <div class="row">
+        <button class="ghost" id="montarResumo">Montar resumo automático</button>
+        <button class="ghost" data-copy="finalCase">Copiar consolidado</button>
+        <button class="primary" id="exportar">Exportar JSON do caso</button>
+        <button class="ghost" id="importar">Importar JSON</button>
+        <input type="file" id="fileInput" accept="application/json" style="display:none" />
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const ids = [
+      'marca','categoria','pais_regiao','objetivo_negocio','bloqueadores','okrs','pergunta_central',
+      'publico_prioritario','mercados_canais','conc1','conc2','conc3','periodo','responsavel','data',
+      'dados_complementares','conhecimento','outAg1','outAg2','outAg3','outMaster','realAg1','realAg2','realAg3','finalCase'
+    ];
+
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      t.classList.add('active');
+      $(t.dataset.panel).classList.add('active');
+      $('k-step').textContent = t.textContent.replace(/^\d+\.\s*/, '');
+    }));
+
+    function getData() {
+      const data = {};
+      ids.forEach(id => data[id] = $(id).value.trim());
+      return data;
+    }
+
+    function setData(data = {}) {
+      ids.forEach(id => { if (data[id] !== undefined) $(id).value = data[id]; });
+      refreshKpis();
+    }
+
+    function safe(v, fallback = '[não informado]') {
+      return (v && v.trim()) ? v.trim() : fallback;
+    }
+
+    function briefingBlock(d) {
+      return `## INPUTS DE BRIEFING DE MARKETING\n\n- Marca: ${safe(d.marca)}\n- Categoria: ${safe(d.categoria)}\n- País/região: ${safe(d.pais_regiao)}\n- Objetivo de negócio: ${safe(d.objetivo_negocio)}\n- OKRs da marca: ${safe(d.okrs)}\n- O que está impedindo a marca de alcançar o objetivo?: ${safe(d.bloqueadores)}\n- Público prioritário: ${safe(d.publico_prioritario)}\n- Concorrentes principais: ${safe(d.conc1)}, ${safe(d.conc2)}, ${safe(d.conc3)}\n- Período de análise: ${safe(d.periodo)}\n- Mercados/canais prioritários: ${safe(d.mercados_canais)}\n- Dados complementares: ${safe(d.dados_complementares)}\n- Pergunta central do projeto: ${safe(d.pergunta_central)}\n`;
+    }
+
+    function knowledgeBlock(d) {
+      return `## CONHECIMENTO PROPRIETARIO DO PROJETO\n- Este conhecimento deve ser tratado como base proprietaria e prioritaria para analise e recomendacoes.\n- Quando houver conflito entre conhecimento geral e base proprietaria, priorize a base proprietaria e explicite o criterio.\n\n[BASE PROPRIETARIA]\n${safe(d.conhecimento, '[nao informado]')}\n`;
+    }
+
+    function promptA1(d) {
+      return `${briefingBlock(d)}\n${knowledgeBlock(d)}\nVocê é o researcher agent — DIAGNÓSTICO (branding).\nObjetivo: gerar diagnóstico claro e acionável de comunicação, tendências e reputação.\n\nEntregue em 7 blocos:\n1) Resumo executivo\n- 8 a 10 bullets com principais achados e riscos.\n2) Comunicação da categoria e concorrência\n- Códigos narrativos dominantes.\n- Tabela comparativa: marca vs 3 concorrentes (mensagem, tom, canais, diferenciação).\n3) Tendências de consumo e inovação\n- 5 tendências com: evidência + impacto + oportunidade para a marca.\n4) Social + Search Listening\n- Principais tópicos por marca.\n- Positivos, neutros, negativos.\n- % de sentimento por marca (quando possível).\n- Alertas de tópicos sensíveis.\n5) Reputação (Reclame Aqui, reviews, comentários)\n- Reclamações recorrentes, elogios recorrentes, fricções da jornada.\n6) Implicações estratégicas\n- 5 implicações para posicionamento.\n- 3 oportunidades e 3 riscos críticos.\n7) Passagem para o conceptor agent\n- O que precisa virar briefing criativo.\n\nRegras:\n- Não invente dados; sinalize lacunas.\n- Diferencie fato, sinal e interpretação.\n- Linguagem simples e objetiva.\n- Feche com “Conclusão diagnóstica” em 1 parágrafo.`;
+    }
+
+    function promptA2(d) {
+      return `${briefingBlock(d)}\n${knowledgeBlock(d)}\nVocê é o conceptor agent — INSPIRADOR.\nInput principal: diagnóstico do researcher agent (colar output A1 abaixo).\n\n[OUTPUT A1]\n${safe(d.realAg1, '[cole aqui o output real do researcher agent]')}\n\nObjetivo: transformar diagnóstico em briefing criativo estratégico para resolver o problema de negócio da marca.\n\nEntregue em 6 blocos:\n1) Verdades essenciais (6 a 8)\n2) Tensões centrais (3 a 4, formato “força A vs força B”)\n3) Problema estratégico (1 frase + explicação curta)\n4) Insights (3, com evidência, implicação e diferenciação)\n5) Rotas de posicionamento (2 rotas com oportunidade/risco/exemplo)\n6) Recomendação (1 rota, insight mestre e briefing final: objetivo, público, mensagem, RTBs, tom, red flags)\n\nEstilo:\n- Muito simples, sem jargão.\n- Clareza e precisão.`;
+    }
+
+    function promptA3(d) {
+      return `${briefingBlock(d)}\n${knowledgeBlock(d)}\nVocê é o architect agent — ARQUITETO.\nInputs: diagnóstico (A1) + briefing estratégico (A2).\n\n[OUTPUT A1]\n${safe(d.realAg1, '[cole aqui o output real do researcher agent]')}\n\n[OUTPUT A2]\n${safe(d.realAg2, '[cole aqui o output real do conceptor agent]')}\n\nObjetivo: construir a Plataforma de Posicionamento final com narrativa coesa e aplicável.\n\nEntregue em 5 blocos:\n1) Síntese narrativa (1 parágrafo)\n2) Frame: Target, Tensão cultural, Cenário competitivo, Insight, Papel da marca, Propósito, Essência\n3) Código de linguagem: verbal, visual, sonoro\n4) Tradução prática: mensagem-mãe, 3 mensagens de suporte, 5 taglines, aplicações por canal\n5) Guardrails + validação: manter, testar, evitar, hipóteses e indicadores\n\nFechar com: “Posicionamento definitivo em 1 frase”.`;
+    }
+
+    function promptMaster(d) {
+      return `${briefingBlock(d)}\n${knowledgeBlock(d)}\nVocê é um ORQUESTRADOR de 3 agentes especialistas em branding.\nExecute em sequência: researcher agent -> conceptor agent -> architect agent.\n\nRegras:\n1) Não invente dados; sinalize lacunas.\n2) Separar fato, sinal e interpretação.\n3) Linguagem simples e executiva.\n4) Coerência entre problema, insight e posicionamento.\n\nETAPA 1 (A1): researcher agent gera diagnóstico completo com comunicação, tendências, social/search listening, reputação, riscos e oportunidades.\nETAPA 2 (A2): conceptor agent converte A1 em briefing criativo com tensões, problema estratégico, 2 rotas e recomendação.\nETAPA 3 (A3): architect agent constrói plataforma final (target, tensão cultural, cenário, insight, papel, propósito, essência, código de linguagem e aplicações).\n\nOutputs já disponíveis para contexto:\n- A1 real: ${safe(d.realAg1, '[não colado]')}\n- A2 real: ${safe(d.realAg2, '[não colado]')}\n- A3 real: ${safe(d.realAg3, '[não colado]')}\n\nEntrega final consolidada:\n1) Diagnóstico consolidado\n2) Estratégia inspiradora\n3) Plataforma de posicionamento final\n\nChecklist final:\n- Responde objetivo e OKRs?\n- Endereça bloqueador principal?\n- Coerência com reputação e sinais de mercado?\n- Define riscos sensíveis e mitigação?`;
+    }
+
+    function refreshKpis() {
+      const d = getData();
+      const total = 17;
+      const filled = [
+        d.marca,d.categoria,d.pais_regiao,d.objetivo_negocio,d.bloqueadores,d.okrs,d.pergunta_central,
+        d.publico_prioritario,d.mercados_canais,d.conc1,d.conc2,d.conc3,d.periodo,d.dados_complementares,d.conhecimento,d.data,d.responsavel
+      ].filter(v => v).length;
+      const prompts = [d.outAg1,d.outAg2,d.outAg3,d.outMaster].filter(v => v).length;
+      const outs = [d.realAg1,d.realAg2,d.realAg3].filter(v => v).length;
+      $('k-filled').textContent = `${filled}/${total}`;
+      $('k-prompts').textContent = `${prompts}/4`;
+      $('k-outs').textContent = `${outs}/3`;
+    }
+
+    function hasKnowledge(d) {
+      return Boolean((d.conhecimento || '').trim());
+    }
+
+    function ensureKnowledgeBeforeGenerate() {
+      const d = getData();
+      if (hasKnowledge(d)) return true;
+      setStatus('Base proprietaria vazia. Preencha a aba 6. Oracle antes de gerar os prompts.');
+      tabs.forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('[data-panel="conhecimento"]').classList.add('active');
+      $('conhecimento').classList.add('warn-border');
+      $('k-step').textContent = 'Oracle';
+      $('conhecimento').focus();
+      return false;
+    }
+
+    ids.forEach(id => $(id).addEventListener('input', refreshKpis));
+    $('conhecimento').addEventListener('input', () => {
+      localStorage.setItem('branding_case_knowledge', $('conhecimento').value);
+      $('conhecimento').classList.remove('warn-border');
+    });
+
+    $('genAg1').addEventListener('click', () => { if (!ensureKnowledgeBeforeGenerate()) return; $('outAg1').value = promptA1(getData()); refreshKpis(); setStatus('Prompt do researcher agent gerado.'); });
+    $('genAg2').addEventListener('click', () => { if (!ensureKnowledgeBeforeGenerate()) return; $('outAg2').value = promptA2(getData()); refreshKpis(); setStatus('Prompt do conceptor agent gerado.'); });
+    $('genAg3').addEventListener('click', () => { if (!ensureKnowledgeBeforeGenerate()) return; $('outAg3').value = promptA3(getData()); refreshKpis(); setStatus('Prompt do architect agent gerado.'); });
+    $('genMaster').addEventListener('click', () => { if (!ensureKnowledgeBeforeGenerate()) return; $('outMaster').value = promptMaster(getData()); refreshKpis(); setStatus('Master prompt gerado.'); });
+
+    $('gerarTudo').addEventListener('click', () => {
+      if (!ensureKnowledgeBeforeGenerate()) return;
+      const d = getData();
+      $('outAg1').value = promptA1(d);
+      $('outAg2').value = promptA2(d);
+      $('outAg3').value = promptA3(d);
+      $('outMaster').value = promptMaster(d);
+      refreshKpis();
+      setStatus('Prompts A1, A2, A3 e Master gerados com sucesso.');
+    });
+
+    document.querySelectorAll('[data-copy]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const target = $(btn.dataset.copy);
+        if (!target.value.trim()) return setStatus('Nada para copiar nesse campo.');
+        try {
+          await navigator.clipboard.writeText(target.value);
+          setStatus(`Conteúdo copiado: ${btn.dataset.copy}`);
+        } catch {
+          setStatus('Falha ao copiar automaticamente. Copie manualmente.');
+        }
+      });
+    });
+
+    function setStatus(msg) { $('status').textContent = msg; }
+
+    $('salvar').addEventListener('click', () => {
+      localStorage.setItem('branding_case_model', JSON.stringify(getData()));
+      setStatus('Caso salvo no navegador (localStorage).');
+    });
+
+    $('carregar').addEventListener('click', () => {
+      const raw = localStorage.getItem('branding_case_model');
+      if (!raw) return setStatus('Nenhum caso salvo encontrado.');
+      try { setData(JSON.parse(raw)); setStatus('Caso carregado com sucesso.'); }
+      catch { setStatus('Erro ao carregar caso salvo.'); }
+    });
+
+    $('limpar').addEventListener('click', () => {
+      if (!confirm('Limpar todos os campos?')) return;
+      setData(Object.fromEntries(ids.map(id => [id, ''])));
+      setStatus('Campos limpos.');
+    });
+
+    $('preencherExemplo').addEventListener('click', () => {
+      setData({
+        marca: 'Nubank',
+        categoria: 'Banco digital',
+        pais_regiao: 'Brasil',
+        objetivo_negocio: 'Aumentar produtos por cliente em 20% nos próximos 12 meses.',
+        bloqueadores: 'Percepção de que a marca é forte em conta/cartão, mas não é lembrada como ecossistema completo.',
+        okrs: 'O1: Aumentar cross-sell. KR1: +20% produtos por cliente. KR2: +15pp na consideração de novos produtos. O2: Melhorar confiança. KR1: reduzir menções negativas sobre atendimento em 25%.',
+        pergunta_central: 'Como reposicionar a marca para ser percebida como parceira financeira completa, mantendo simplicidade?',
+        publico_prioritario: 'Adultos 25-40, urbanos, digitais, classe média, que buscam autonomia financeira sem complexidade.',
+        mercados_canais: 'App, social media, CRM, PR, mídia digital e conteúdo educativo.',
+        conc1: 'Inter',
+        conc2: 'C6 Bank',
+        conc3: 'PicPay',
+        periodo: 'Últimos 12 meses',
+        responsavel: 'Time de Branding',
+        data: new Date().toLocaleDateString('pt-BR'),
+        dados_complementares: 'NPS trimestral, tracking de marca semestral, funil de aquisição, reviews app stores, menções orgânicas em redes, temas de Reclame Aqui.',
+        conhecimento: 'Frameworks proprietários: pirâmide de posicionamento, mapa de tensões culturais, matriz de ativos distintivos, modelo de arquitetura de mensagem, heurísticas de reputação por estágio de jornada.'
+      });
+      setStatus('Exemplo real preenchido. Gere os prompts para iniciar o teste.');
+    });
+
+    $('importarConhecimento').addEventListener('click', () => $('fileKnowledge').click());
+    $('fileKnowledge').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const imported = String(reader.result || '').trim();
+        if (!imported) return setStatus('Arquivo vazio. Selecione um arquivo com conteudo.');
+        $('conhecimento').value = imported;
+        localStorage.setItem('branding_case_knowledge', imported);
+        refreshKpis();
+        setStatus('Conhecimento proprietario importado para a base do projeto.');
+      };
+      reader.readAsText(file);
+    });
+
+    $('limparConhecimento').addEventListener('click', () => {
+      if (!confirm('Limpar somente a base de conhecimento proprietario?')) return;
+      $('conhecimento').value = '';
+      localStorage.removeItem('branding_case_knowledge');
+      refreshKpis();
+      setStatus('Base proprietaria limpa.');
+    });
+
+    const savedKnowledge = localStorage.getItem('branding_case_knowledge');
+    if (savedKnowledge && !$('conhecimento').value.trim()) {
+      $('conhecimento').value = savedKnowledge;
+    }
+
+    $('montarResumo').addEventListener('click', () => {
+      const d = getData();
+      $('finalCase').value = `CASO FINAL CONSOLIDADO\n\nMarca: ${safe(d.marca)}\nObjetivo de negócio: ${safe(d.objetivo_negocio)}\nBloqueador principal: ${safe(d.bloqueadores)}\n\n[RESUMO A1]\n${safe(d.realAg1, '[pendente]')}\n\n[RESUMO A2]\n${safe(d.realAg2, '[pendente]')}\n\n[PLATAFORMA FINAL A3]\n${safe(d.realAg3, '[pendente]')}\n\nChecklist final:\n- Responde objetivo e OKRs?\n- Endereça bloqueador principal?\n- Coerente com sinais de reputação?\n- Traz riscos e mitigação?`;
+      refreshKpis();
+      setStatus('Resumo automático montado no painel Final Case.');
+    });
+
+    $('exportar').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(getData(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const fileName = `caso_branding_${(getData().marca || 'sem_marca').replace(/\s+/g, '_').toLowerCase()}.json`;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setStatus('JSON exportado.');
+    });
+
+    $('importar').addEventListener('click', () => $('fileInput').click());
+    $('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          setData(JSON.parse(reader.result));
+          setStatus('JSON importado com sucesso.');
+        } catch {
+          setStatus('Arquivo inválido. Use um JSON exportado por esta interface.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    refreshKpis();
+  </script>
+</body>
+</html>
